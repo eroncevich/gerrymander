@@ -4,6 +4,7 @@ from copy import copy, deepcopy
 M = []
 m=0
 n=0
+count =0;
 
 
 def main():
@@ -39,13 +40,16 @@ def initDMatrix():
 def createTree(D):
   global m
   global n
+  global count
   finished = False
   pNode = Node(None)
   iterate(D,pNode,-1)
+  print count
 
 def iterate(D, pNode, num):
   global m
   global n
+  global count
   finished = True
 
   #Check Vert Lines
@@ -70,10 +74,23 @@ def iterate(D, pNode, num):
       iterate(newD,cNode,num+1)
       finished = False
 
+  #Check Square
+  for i in range(0,m-1):
+    for j in range(0,n-1):
+      if(square(D,i,j)):
+        cNode = Node(pNode)
+        pNode.addChild(cNode)
+        newD = deepcopy(D)
+        for i1 in range(i,i+2):
+          for j1 in range(j,j+2):
+            newD[i1][j1] = num+1
+        iterate(newD,cNode,num+1)
+        finished = False
+
   if finished:
+    count= count +1
     print score(D,num)
     print D
-  #print D
   return
 
 def vertLine(D,j):
@@ -87,6 +104,12 @@ def horzLine(D,i):
   for j in range(0,n):
     if(D[i][j]!=-1):
       return False
+  return True
+def square(D,i0,j0):
+  for i in range(i0,i0+2):
+    for j in range(j0,j0+2):
+      if(D[i][j] !=-1):
+        return False
   return True
 
 def score(D,num):
