@@ -10,7 +10,7 @@ count =0;
 def main():
   global m
   global n
-  inFile = open("smallNeighborhood.txt","r")
+  inFile = open(sys.argv[1],"r")
   i=0
   for row in inFile:
     j=0
@@ -43,55 +43,77 @@ def createTree(D):
   global count
   finished = False
   pNode = Node(None)
-  iterate(D,pNode,-1)
-  print count
-
-def iterate(D, pNode, num):
+  #print bestScore, bestD, fFlag
+  while(not finished):
+    (bestScore,D, finished) = iterate(D,-1)
+  print bestScore, D, fFlag
+def iterate(D, num):
   global m
   global n
   global count
+
+  if(m==8):
+    blockSize = 3
+  else:
+    blockSize = 2
+
+  if(num>2):
+    return (score(D,num), D, False)
   finished = True
+
+  isMax = num % 2
+  myBest= m*n if isMax else -m*n
 
   #Check Vert Lines
   for j in range(0,n):
     if(vertLine(D,j)):
-      cNode = Node(pNode)
-      pNode.addChild(cNode)
       newD = deepcopy(D)
       for i in range(0,m):
         newD[i][j] = num+1
-      iterate(newD,cNode,num+1)
+      (cBest,cD, ff) = iterate(newD,num+1)
+      if(isMax and cBest<myBest):
+        myBest = cBest
+        bestD = cD
+        fFlag = ff
+      elif((not isMax)and cBest>myBest):
+        myBest = cBest
+        bestD = cD
+        fFlag = ff
       finished = False
 
-  #Check Horz Lines
-  for i in range(0,m):
-    if(horzLine(D,i)):
-      cNode = Node(pNode)
-      pNode.addChild(cNode)
-      newD = deepcopy(D)
-      for j in range(0,n):
-        newD[i][j] = num+1
-      iterate(newD,cNode,num+1)
-      finished = False
+  # #Check Horz Lines
+  # for i in range(0,m):
+  #   if(horzLine(D,i)):
+  #     cNode = Node(pNode)
+  #     pNode.addChild(cNode)
+  #     newD = deepcopy(D)
+  #     for j in range(0,n):
+  #       newD[i][j] = num+1
+  #     iterate(newD,cNode,num+1)
+  #     finished = False
 
   #Check Square
-  for i in range(0,m-1):
-    for j in range(0,n-1):
-      if(square(D,i,j)):
-        cNode = Node(pNode)
-        pNode.addChild(cNode)
+  for i in range(0,m-blockSize+1):
+    for j in range(0,n-blockSize+1):
+      if(square(D,i,j,blockSize)):
         newD = deepcopy(D)
         for i1 in range(i,i+2):
           for j1 in range(j,j+2):
             newD[i1][j1] = num+1
-        iterate(newD,cNode,num+1)
+        (cBest,cD,ff) = iterate(newD,num+1)
+        if(isMax and cBest<myBest):
+          myBest = cBest
+          bestD = cD
+          fFlag = ff
+        elif((not isMax) and cBest>myBest):
+          myBest = cBest
+          bestD = cD
+          fFlag = ff
         finished = False
-
   if finished:
-    count= count +1
-    print score(D,num)
-    print D
-  return
+    return (score(D,num),D,True)
+
+  return (myBest,bestD,fFlag)
 
 def vertLine(D,j):
   global m
@@ -105,7 +127,7 @@ def horzLine(D,i):
     if(D[i][j]!=-1):
       return False
   return True
-def square(D,i0,j0):
+def square(D,i0,j0,blockSize):
   for i in range(i0,i0+2):
     for j in range(j0,j0+2):
       if(D[i][j] !=-1):
@@ -142,5 +164,7 @@ class Node:
     self.score = -1
   def addChild(self,child):
     self.children.append(child)
+  def setScore(self,points):
+    self.score = points
 
 main()
