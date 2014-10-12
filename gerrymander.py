@@ -52,7 +52,8 @@ def createTree(D):
     maxRecurse+=6
     (bestScore,D, finished, lowN) = iterate(D,lowN)
     #print lowN, D, finished
-  print bestScore, D
+  print "Player 1's score:",bestScore
+  printDistricts(D)
 def iterate(D, num):
   global m
   global n
@@ -85,17 +86,6 @@ def iterate(D, num):
         lowN = cN
       finished = False
 
-  # #Check Horz Lines
-  # for i in range(0,m):
-  #   if(horzLine(D,i)):
-  #     cNode = Node(pNode)
-  #     pNode.addChild(cNode)
-  #     newD = deepcopy(D)
-  #     for j in range(0,n):
-  #       newD[i][j] = num+1
-  #     iterate(newD,cNode,num+1)
-  #     finished = False
-
   #Check Square
   for i in range(0,m-blockSize+1,blockSize):
     for j in range(0,n-blockSize+1):
@@ -105,9 +95,6 @@ def iterate(D, num):
           for j1 in range(j,j+blockSize):
             newD[i1][j1] = num+1
         (cBest,cD,ff,cN) = iterate(newD,num+1)
-        if(num==-1 and i==0 and j==1):
-          print cBest, cD, cN, isMax
-          print isMax
         if((isMax and cBest>myBest)or((not isMax) and cBest<myBest)):
           myBest = cBest
           bestD = cD
@@ -125,12 +112,7 @@ def vertLine(D,j):
     if(D[i][j]!=-1):
       return False
   return True
-def horzLine(D,i):
-  global n
-  for j in range(0,n):
-    if(D[i][j]!=-1):
-      return False
-  return True
+
 def square(D,i0,j0,blockSize):
   for i in range(i0,i0+blockSize):
     for j in range(j0,j0+blockSize):
@@ -170,7 +152,10 @@ def printDistricts(D):
   global n
   for i in range (0,m):
     for j in range (0,n):
-      
+      print M[i][j],D[i][j], " ",
+    print ""
+
+
 class Node:
   def __init__(self,parentN):
     self.children = []
