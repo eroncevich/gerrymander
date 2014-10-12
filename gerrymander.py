@@ -45,15 +45,14 @@ def createTree(D):
   global maxRecurse
   maxRecurse =0
   finished = False
-  pNode = Node(None)
-  #print bestScore, bestD, fFlag
+
   lowN=-1
   while(not finished):
     maxRecurse+=5
     (bestScore,D, finished, lowN) = iterate(D,lowN)
     #print lowN, D, finished
   print "Player 1's score:",bestScore
-  score(D,0)
+  score(D)
   printDistricts(D)
 def iterate(D, num):
   global m
@@ -61,6 +60,7 @@ def iterate(D, num):
   global count
   global maxRecurse
 
+  #if small, choose 2x2, if large choose 4x2
   if(m==8):
     blockSizeM = 4
     blockSizeN = 2
@@ -68,20 +68,22 @@ def iterate(D, num):
     blockSizeM = 2
     blockSizeN = 2
 
+  #if too complex and deep, stop, and return current path
   if(num>=maxRecurse):
-    return (score(D,num), D, False, num)
+    return (score(D), D, False, num)
   finished = True
 
   isMax = num % 2
   myBest= -m*n if isMax else m*n
 
-  #Check Vert Lines
-  for j in range(0,n):
-    if(vertLine(D,j)):
+  #Check Vert Lines mx1
+  for j in range(0,m):
+    if(vertLine(D,j)):#check if spot is empty
       newD = deepcopy(D)
-      for i in range(0,m):
+      for i in range(0,m):#fill in districts
         newD[i][j] = num+1
       (cBest,cD, ff, cN) = iterate(newD,num+1)
+      #pick the best number for the min/max depending on turn number
       if((isMax and cBest>myBest) or((not isMax)and cBest<myBest)):
         myBest = cBest
         bestD = cD
@@ -89,31 +91,34 @@ def iterate(D, num):
         lowN = cN
       finished = False
 
-  #Check Square
+  #Check Square/Rect
+  #This is special because if a rectangle is picked at (i,j)
+  #The entire column must be Sqr/Rect for the board to be complete
+  #this saves computation time
   for j in range(0,n-blockSizeN+1):
-    if(square(D,j,blockSizeN)):
+    if(square(D,j,blockSizeN)): #check if spot is empty
       newD = deepcopy(D)
       iteration =0
       for iteration in range(0,m/blockSizeM):
         i0 = iteration*blockSizeM
         for i1 in range(i0,i0+blockSizeM):
           for j1 in range(j,j+blockSizeN):
-            newD[i1][j1] = num+iteration*m+1
+            newD[i1][j1] = num+iteration*m+1 #fill in districts
       (cBest,cD,ff,cN) = iterate(newD,num+1)
-      if(num==-1 and i==0 and j==3):
-        printDistricts(cD), cBest, myBest
-        printDistricts(bestD)
+      #pick the best number for the min/max depending on turn number
       if((isMax and cBest>myBest)or((not isMax) and cBest<myBest)):
         myBest = cBest
         bestD = cD
         fFlag = ff
         lowN = cN
       finished = False
-  if finished:
-    return (score(D,num),D,True, num)
 
+  if finished: #all districts are filled in
+    return (score(D),D,True, num)
+  #returns best district arrangement for Min or max
   return (myBest,bestD,fFlag,lowN)
 
+#checks if spot open
 def vertLine(D,j):
   global m
   for i in range(0,m):
@@ -121,6 +126,7 @@ def vertLine(D,j):
       return False
   return True
 
+#checks if spot open
 def square(D,j0, blockSizeN):
   global m
   for i in range(0,m):
@@ -129,15 +135,17 @@ def square(D,j0, blockSizeN):
         return False
   return True
 
-def score(D,num):
+def score(D):
   global m
   global n
   scoreD = 0
   scoreR = 0
   nScore = {}
+  #go through every square, count Dem vs Rep depending on
+  #district as determined by D[i][j]
   for i in range(0,m):
     for j in range(0,n):
-      if(D[i][j] <0):
+      if(D[i][j] <0): #ignore if this location hasn't been assigned Dist
         continue
       if(D[i][j] not in nScore):
         nScore[D[i][j]]=0
@@ -145,12 +153,14 @@ def score(D,num):
         nScore[D[i][j]] +=1
       else:
         nScore[D[i][j]] -=1
+  #count the score of each district
   for key, score in nScore.iteritems():
     if score>0:
       scoreD+=1
     elif score<0:
       scoreR+=1
-  return scoreD-scoreR
+  #The score is the number of R wins - D wins
+  return scoreR-scoreD
 
 def printDistricts(D):
   global m
@@ -160,15 +170,5 @@ def printDistricts(D):
       print M[i][j],D[i][j], " ",
     print ""
 
-
-class Node:
-  def __init__(self,parentN):
-    self.children = []
-    self.parent = parentN
-    self.score = -1
-  def addChild(self,child):
-    self.children.append(child)
-  def setScore(self,points):
-    self.score = points
 
 main()
