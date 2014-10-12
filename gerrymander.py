@@ -4,7 +4,8 @@ from copy import copy, deepcopy
 M = []
 m=0
 n=0
-count =0;
+maxRecurse=0
+count =0
 
 
 def main():
@@ -41,28 +42,34 @@ def createTree(D):
   global m
   global n
   global count
+  global maxRecurse
+  maxRecurse =0
   finished = False
   pNode = Node(None)
   #print bestScore, bestD, fFlag
+  lowN=-1
   while(not finished):
-    (bestScore,D, finished) = iterate(D,-1)
-  print bestScore, D, fFlag
+    maxRecurse+=6
+    (bestScore,D, finished, lowN) = iterate(D,lowN)
+    #print lowN, D, finished
+  print bestScore, D
 def iterate(D, num):
   global m
   global n
   global count
+  global maxRecurse
 
   if(m==8):
-    blockSize = 3
+    blockSize = 4
   else:
     blockSize = 2
 
-  if(num>2):
-    return (score(D,num), D, False)
+  if(num>=maxRecurse):
+    return (score(D,num), D, False, num)
   finished = True
 
   isMax = num % 2
-  myBest= m*n if isMax else -m*n
+  myBest= -m*n if isMax else m*n
 
   #Check Vert Lines
   for j in range(0,n):
@@ -70,15 +77,12 @@ def iterate(D, num):
       newD = deepcopy(D)
       for i in range(0,m):
         newD[i][j] = num+1
-      (cBest,cD, ff) = iterate(newD,num+1)
-      if(isMax and cBest<myBest):
+      (cBest,cD, ff, cN) = iterate(newD,num+1)
+      if((isMax and cBest>myBest) or((not isMax)and cBest<myBest)):
         myBest = cBest
         bestD = cD
         fFlag = ff
-      elif((not isMax)and cBest>myBest):
-        myBest = cBest
-        bestD = cD
-        fFlag = ff
+        lowN = cN
       finished = False
 
   # #Check Horz Lines
@@ -93,27 +97,27 @@ def iterate(D, num):
   #     finished = False
 
   #Check Square
-  for i in range(0,m-blockSize+1):
+  for i in range(0,m-blockSize+1,blockSize):
     for j in range(0,n-blockSize+1):
       if(square(D,i,j,blockSize)):
         newD = deepcopy(D)
-        for i1 in range(i,i+2):
-          for j1 in range(j,j+2):
+        for i1 in range(i,i+blockSize):
+          for j1 in range(j,j+blockSize):
             newD[i1][j1] = num+1
-        (cBest,cD,ff) = iterate(newD,num+1)
-        if(isMax and cBest<myBest):
+        (cBest,cD,ff,cN) = iterate(newD,num+1)
+        if(num==-1 and i==0 and j==1):
+          print cBest, cD, cN, isMax
+          print isMax
+        if((isMax and cBest>myBest)or((not isMax) and cBest<myBest)):
           myBest = cBest
           bestD = cD
           fFlag = ff
-        elif((not isMax) and cBest>myBest):
-          myBest = cBest
-          bestD = cD
-          fFlag = ff
+          lowN = cN
         finished = False
   if finished:
-    return (score(D,num),D,True)
+    return (score(D,num),D,True, num)
 
-  return (myBest,bestD,fFlag)
+  return (myBest,bestD,fFlag,lowN)
 
 def vertLine(D,j):
   global m
@@ -128,9 +132,14 @@ def horzLine(D,i):
       return False
   return True
 def square(D,i0,j0,blockSize):
-  for i in range(i0,i0+2):
-    for j in range(j0,j0+2):
+  for i in range(i0,i0+blockSize):
+    for j in range(j0,j0+blockSize):
       if(D[i][j] !=-1):
+        return False
+  for i in range (0,m):
+    curNum = D[i][j0]
+    for j in range(j0,j0+blockSize):
+      if(curNum!=D[i][j]):
         return False
   return True
 
@@ -156,7 +165,12 @@ def score(D,num):
       scoreR = scoreR+1
   return scoreD-scoreR
 
-
+def printDistricts(D):
+  global m
+  global n
+  for i in range (0,m):
+    for j in range (0,n):
+      
 class Node:
   def __init__(self,parentN):
     self.children = []
