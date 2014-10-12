@@ -49,7 +49,7 @@ def createTree(D):
   b= m*n
   lowN=-1
   while(not finished):
-    maxRecurse+=5
+    maxRecurse+=8
     (bestScore,D, finished, lowN) = iterate(D,lowN,a,b)
     #print lowN, D, finished
   print "Player 1's score:",bestScore
@@ -89,10 +89,12 @@ def iterate(D, num,a,b):
         if(isMax):#ab pruning
           a=cBest
           if(b<=a):
+            print num,"- Pruned Line at ",j
             return (a, cD, True, num)
         else:
           b=cBest
           if(b<=a):
+            print  num,"- Pruned Line at ",j
             return (b, cD, True, num)
         myBest = cBest
         bestD = cD
@@ -119,10 +121,12 @@ def iterate(D, num,a,b):
         if(isMax):#ab pruning
           a=cBest
           if(b<=a):
+            print  num,"- Pruned Sqr/Rect at ",i,j
             return (a, cD, True, num)
         else:
           b=cBest
           if(b<=a):
+            print num,"- Pruned Sqr/Rect at ",i,j
             return (b, cD, True, num)
         myBest = cBest
         bestD = cD
