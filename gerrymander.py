@@ -22,7 +22,7 @@ def main():
       M[i].append(index)
       j=j+1
     i=i+1
-  print M
+#  print M
   m = len(M)
   n = len(M[0])
   D = initDMatrix()
@@ -45,16 +45,17 @@ def createTree(D):
   global maxRecurse
   maxRecurse =0
   finished = False
-
+  a= -m*n
+  b= m*n
   lowN=-1
   while(not finished):
     maxRecurse+=5
-    (bestScore,D, finished, lowN) = iterate(D,lowN)
+    (bestScore,D, finished, lowN) = iterate(D,lowN,a,b)
     #print lowN, D, finished
   print "Player 1's score:",bestScore
   score(D)
   printDistricts(D)
-def iterate(D, num):
+def iterate(D, num,a,b):
   global m
   global n
   global count
@@ -82,9 +83,17 @@ def iterate(D, num):
       newD = deepcopy(D)
       for i in range(0,m):#fill in districts
         newD[i][j] = num+1
-      (cBest,cD, ff, cN) = iterate(newD,num+1)
+      (cBest,cD, ff, cN) = iterate(newD,num+1,a,b)
       #pick the best number for the min/max depending on turn number
       if((isMax and cBest>myBest) or((not isMax)and cBest<myBest)):
+        if(isMax):#ab pruning
+          a=cBest
+          if(b<=a):
+            return (a, cD, True, num)
+        else:
+          b=cBest
+          if(b<=a):
+            return (b, cD, True, num)
         myBest = cBest
         bestD = cD
         fFlag = ff
@@ -104,9 +113,17 @@ def iterate(D, num):
         for i1 in range(i0,i0+blockSizeM):
           for j1 in range(j,j+blockSizeN):
             newD[i1][j1] = num+iteration*m+1 #fill in districts
-      (cBest,cD,ff,cN) = iterate(newD,num+1)
+      (cBest,cD,ff,cN) = iterate(newD,num+1,a,b)
       #pick the best number for the min/max depending on turn number
       if((isMax and cBest>myBest)or((not isMax) and cBest<myBest)):
+        if(isMax):#ab pruning
+          a=cBest
+          if(b<=a):
+            return (a, cD, True, num)
+        else:
+          b=cBest
+          if(b<=a):
+            return (b, cD, True, num)
         myBest = cBest
         bestD = cD
         fFlag = ff
@@ -165,10 +182,41 @@ def score(D):
 def printDistricts(D):
   global m
   global n
+
+  scoreD = 0
+  scoreR = 0
+  nScore = {}
+  #go through every square, count Dem vs Rep depending on
+  #district as determined by D[i][j]
+  for i in range(0,m):
+    for j in range(0,n):
+      if(D[i][j] <0): #ignore if this location hasn't been assigned Dist
+        continue
+      if(D[i][j]>m):
+        D[i][j]= str(D[i][j]%m)+"b"
+      if(D[i][j] not in nScore):
+        nScore[D[i][j]]=0
+      if M[i][j] =='D':
+        nScore[D[i][j]] +=1
+      else:
+        nScore[D[i][j]] -=1
+  #count the score of each district
+  for key, score in nScore.iteritems():
+    if score>0:
+      scoreD+=1
+      print "District", key, "is Democrat"
+    elif score<0:
+      scoreR+=1
+      print "District", key, "is Republican"
+    else:
+      print "District", key, "is Tied"
+  print "Total Score", "D-",scoreD,"R-",scoreR
+  #The score is the number of R wins - D wins
   for i in range (0,m):
     for j in range (0,n):
       print M[i][j],D[i][j], " ",
     print ""
+  print "Republican Final Advantage", scoreR-scoreD
 
 
 main()
