@@ -49,10 +49,11 @@ def createTree(D):
   #print bestScore, bestD, fFlag
   lowN=-1
   while(not finished):
-    maxRecurse+=6
+    maxRecurse+=5
     (bestScore,D, finished, lowN) = iterate(D,lowN)
     #print lowN, D, finished
   print "Player 1's score:",bestScore
+  score(D,0)
   printDistricts(D)
 def iterate(D, num):
   global m
@@ -61,9 +62,11 @@ def iterate(D, num):
   global maxRecurse
 
   if(m==8):
-    blockSize = 4
+    blockSizeM = 4
+    blockSizeN = 2
   else:
-    blockSize = 2
+    blockSizeM = 2
+    blockSizeN = 2
 
   if(num>=maxRecurse):
     return (score(D,num), D, False, num)
@@ -87,20 +90,25 @@ def iterate(D, num):
       finished = False
 
   #Check Square
-  for i in range(0,m-blockSize+1,blockSize):
-    for j in range(0,n-blockSize+1):
-      if(square(D,i,j,blockSize)):
-        newD = deepcopy(D)
-        for i1 in range(i,i+blockSize):
-          for j1 in range(j,j+blockSize):
-            newD[i1][j1] = num+1
-        (cBest,cD,ff,cN) = iterate(newD,num+1)
-        if((isMax and cBest>myBest)or((not isMax) and cBest<myBest)):
-          myBest = cBest
-          bestD = cD
-          fFlag = ff
-          lowN = cN
-        finished = False
+  for j in range(0,n-blockSizeN+1):
+    if(square(D,j,blockSizeN)):
+      newD = deepcopy(D)
+      iteration =0
+      for iteration in range(0,m/blockSizeM):
+        i0 = iteration*blockSizeM
+        for i1 in range(i0,i0+blockSizeM):
+          for j1 in range(j,j+blockSizeN):
+            newD[i1][j1] = num+iteration*m+1
+      (cBest,cD,ff,cN) = iterate(newD,num+1)
+      if(num==-1 and i==0 and j==3):
+        printDistricts(cD), cBest, myBest
+        printDistricts(bestD)
+      if((isMax and cBest>myBest)or((not isMax) and cBest<myBest)):
+        myBest = cBest
+        bestD = cD
+        fFlag = ff
+        lowN = cN
+      finished = False
   if finished:
     return (score(D,num),D,True, num)
 
@@ -113,15 +121,11 @@ def vertLine(D,j):
       return False
   return True
 
-def square(D,i0,j0,blockSize):
-  for i in range(i0,i0+blockSize):
-    for j in range(j0,j0+blockSize):
+def square(D,j0, blockSizeN):
+  global m
+  for i in range(0,m):
+    for j in range(j0,j0+blockSizeN):
       if(D[i][j] !=-1):
-        return False
-  for i in range (0,m):
-    curNum = D[i][j0]
-    for j in range(j0,j0+blockSize):
-      if(curNum!=D[i][j]):
         return False
   return True
 
@@ -129,22 +133,23 @@ def score(D,num):
   global m
   global n
   scoreD = 0
-  scoreR =0
-  nDem = [0]*(num+1)
-  nRep = [0]*(num+1)
+  scoreR = 0
+  nScore = {}
   for i in range(0,m):
     for j in range(0,n):
       if(D[i][j] <0):
         continue
+      if(D[i][j] not in nScore):
+        nScore[D[i][j]]=0
       if M[i][j] =='D':
-        nDem[D[i][j]] = nDem[D[i][j]]+1
+        nScore[D[i][j]] +=1
       else:
-        nRep[D[i][j]] = nRep[D[i][j]]+1
-  for i in range(0,num+1):
-    if(nDem[i]>nRep[i]):
-      scoreD = scoreD+1
-    elif(nDem[i]<nRep[i]):
-      scoreR = scoreR+1
+        nScore[D[i][j]] -=1
+  for key, score in nScore.iteritems():
+    if score>0:
+      scoreD+=1
+    elif score<0:
+      scoreR+=1
   return scoreD-scoreR
 
 def printDistricts(D):
